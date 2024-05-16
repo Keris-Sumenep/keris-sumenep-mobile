@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:museumapp/pages/main.dart';
+import 'package:museumapp/pages/konten.dart';
+import 'package:museumapp/pages/scan.dart';
+// import 'package:museumapp/pages/main.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,7 +18,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MainPages(),
+      home: const KontenPages(),
     );
   }
 }

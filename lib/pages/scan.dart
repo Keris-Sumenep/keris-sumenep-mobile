@@ -169,7 +169,7 @@ class _MainPagesState extends State<MainPages> {
                             backgroundColor: MaterialStateProperty.all<Color>(
                                 isCameraOpen
                                     ? Colors.red
-                                    : const Color(0xFFFFF700)),
+                                    : const Color(0xFF58B431)),
                             shape: MaterialStateProperty.all<
                                 RoundedRectangleBorder>(
                               RoundedRectangleBorder(
@@ -189,7 +189,7 @@ class _MainPagesState extends State<MainPages> {
                               Text(
                                 isCameraOpen ? 'Tutup Kamera' : 'Scan Sekarang',
                                 style: TextStyle(
-                                  fontSize: 25,
+                                  fontSize: 18,
                                   fontFamily: 'Orelega One',
                                   color: isCameraOpen
                                       ? Colors.white
@@ -218,7 +218,7 @@ class _MainPagesState extends State<MainPages> {
                                         color: Color.fromARGB(255, 0, 0, 0),
                                       ),
                                     ],
-                                    fontSize: 25,
+                                    fontSize: 18,
                                     fontFamily: 'Orelega One',
                                     color: isCameraOpen
                                         ? Colors.white

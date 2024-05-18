@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:museumapp/main.dart';
+import 'package:museumapp/pages/scan.dart';
 
 class KontenPages extends StatefulWidget {
-  const KontenPages({Key? key}) : super(key: key);
+  final String url;
+  final String kode;
+
+  const KontenPages({Key? key, required this.url, required this.kode})
+      : super(key: key);
 
   @override
   State<KontenPages> createState() => _KontenPagesState();
 }
 
 class _KontenPagesState extends State<KontenPages> {
-  String selectedLanguage = 'Indonesia'; // Default language
+  late Map<String, dynamic> kontenData = {};
+  String selectedLanguage = 'Indonesia';
   final player = AudioPlayer();
   bool isPlaying = false;
   bool isDraggingSlider = false;
@@ -20,7 +27,7 @@ class _KontenPagesState extends State<KontenPages> {
   @override
   void initState() {
     super.initState();
-
+    fetchData();
     player.onPlayerStateChanged.listen((state) {
       setState(() {
         isPlaying = state == PlayerState.playing;
@@ -42,6 +49,22 @@ class _KontenPagesState extends State<KontenPages> {
     });
   }
 
+  Future<void> fetchData() async {
+    try {
+      final response = await http.get(Uri.parse(widget.url));
+      if (response.statusCode == 200) {
+        setState(() {
+          kontenData = jsonDecode(response.body)['payload'];
+        });
+      } else {
+        throw Exception('Failed to load data');
+      }
+    } catch (e) {
+      print('Error fetching data: $e');
+      // Handle error accordingly
+    }
+  }
+
   Future<void> playAudioFromUrl(String url) async {
     await player.play(UrlSource(url));
   }
@@ -50,17 +73,17 @@ class _KontenPagesState extends State<KontenPages> {
     await player.stop();
   }
 
-  @override
-  void dispose() {
-    player.dispose();
-    super.dispose();
-  }
-
   String formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     final minutes = twoDigits(duration.inMinutes.remainder(60));
     final seconds = twoDigits(duration.inSeconds.remainder(60));
     return [minutes, seconds].join(':');
+  }
+
+  @override
+  void dispose() {
+    player.dispose();
+    super.dispose();
   }
 
   @override
@@ -85,39 +108,37 @@ class _KontenPagesState extends State<KontenPages> {
               backgroundColor: Colors.white,
               elevation: 0,
               title: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Image.asset(
-                          'images/pens_remBG.png',
-                          height: 38,
-                          width: 36.3,
-                        ),
-                      ],
-                    ),
-                  ),
                   Column(
                     mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Image.asset(
-                            'images/pens_sumenep_bg.png',
-                            height: 95,
-                            width: 95,
-                          ),
-                          Image.asset(
-                            'images/sumenep_logo-removebg.png',
-                            height: 38,
-                            width: 42.42,
-                          ),
-                        ],
+                      Image.asset(
+                        'images/pens_remBG.png',
+                        height: 38,
+                        width: 36.3,
+                      ),
+                    ],
+                  ),
+                  SizedBox(width: 50),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset(
+                        'images/pens_sumenep_bg.png',
+                        height: 95,
+                        width: 95,
+                      ),
+                    ],
+                  ),
+                  SizedBox(width: 50),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset(
+                        'images/sumenep_logo-removebg.png',
+                        height: 38,
+                        width: 42.42,
                       ),
                     ],
                   ),
@@ -129,79 +150,85 @@ class _KontenPagesState extends State<KontenPages> {
       ),
       body: Stack(
         children: <Widget>[
-          // Back button
-          Positioned(
-            top: 10,
-            left: 10,
-            child: IconButton(
-              icon: const Icon(
-                Icons.chevron_left,
-                size: 40,
-                color: Colors.white,
-              ),
-              onPressed: () {
-                Navigator.of(context).pop();
-                main();
-              },
-            ),
-          ),
           SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 80),
+                const SizedBox(height: 30),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Container(
-                    height: 317,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2A3276),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.yellow,
-                        width: 1.0,
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2A3276),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.yellow,
+                          width: 1.0,
+                        ),
                       ),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          'Keris Majapahit',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontFamily: 'Orelega One',
-                            fontSize: 34,
-                            fontWeight: FontWeight.bold,
+                      child: SingleChildScrollView(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            minHeight: 290,
+                          ),
+                          child: Wrap(
+                            alignment: WrapAlignment.center,
+                            children: [
+                              Container(
+                                width: MediaQuery.of(context).size.width,
+                                child: Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                        left: 40,
+                                        right: 40,
+                                        top: 10,
+                                        bottom: 2),
+                                    child: Text(
+                                      kontenData['nama'] ?? '',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontFamily: 'Orelega One',
+                                        fontSize: 34,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                width: MediaQuery.of(context).size.width,
+                                child: Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(bottom: 10),
+                                    child: Image.asset(
+                                      'images/keris.png',
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Colors.yellow,
-                              width: 1.0,
-                            ),
-                          ),
-                          child: Image.asset(
-                            'images/keris.png',
-                            height: 216,
-                            width: 225,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 20),
-                Container(
-                  alignment: Alignment.centerLeft,
+                Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Padding(
                         padding: EdgeInsets.symmetric(
-                            vertical: 8.0, horizontal: 12.0),
+                          vertical: 8.0,
+                          horizontal: 12.0,
+                        ),
                         child: Text(
                           'Pilih Bahasa:',
                           style: TextStyle(
@@ -238,6 +265,7 @@ class _KontenPagesState extends State<KontenPages> {
                       ),
                       const SizedBox(height: 10),
                       Container(
+                        width: double.infinity,
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Colors.white,
@@ -247,21 +275,20 @@ class _KontenPagesState extends State<KontenPages> {
                           boxShadow: [
                             BoxShadow(
                               color: Colors.grey.withOpacity(0.5),
-                              spreadRadius: 1,
-                              blurRadius: 5,
-                              offset: Offset(0, 3),
+                              spreadRadius: 2,
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
                             ),
                           ],
                         ),
-                        child: const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'قيل لمحمد بن الحسن رحمة الله عليهما شعرا\n`تعـلـم فــإن الـعلـم زيـن لأهــلــه`\nBelajarlah!, Sebab ilmu adalah penghias bagi pemiliknya..',
-                              style:
-                                  TextStyle(fontSize: 16, color: Colors.black),
+                        child: SingleChildScrollView(
+                          child: Text(
+                            kontenData['deskripsi'] ?? '',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.black,
                             ),
-                          ],
+                          ),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -302,8 +329,7 @@ class _KontenPagesState extends State<KontenPages> {
                                   if (isPlaying) {
                                     stopAudio();
                                   } else {
-                                    playAudioFromUrl(
-                                        'https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3');
+                                    playAudioFromUrl(widget.url);
                                   }
                                 },
                                 child: Text(
@@ -321,7 +347,9 @@ class _KontenPagesState extends State<KontenPages> {
                                   shadowColor: Colors.black,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    side: const BorderSide(color: Colors.black),
+                                    side: const BorderSide(
+                                      color: Colors.black,
+                                    ),
                                   ),
                                 ),
                               ),

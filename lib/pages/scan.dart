@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:museumapp/pages/konten.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
 
 class MainPages extends StatefulWidget {
   const MainPages({Key? key}) : super(key: key);
@@ -10,11 +11,11 @@ class MainPages extends StatefulWidget {
 }
 
 class _MainPagesState extends State<MainPages> {
-  late QRViewController controller;
+  QRViewController? controller;
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   bool isCameraOpen = false;
   bool isScanned = false;
-  bool isLoading = false; // Tambahkan variabel isLoading
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -38,39 +39,37 @@ class _MainPagesState extends State<MainPages> {
               backgroundColor: Colors.white,
               elevation: 0,
               title: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Image.asset(
-                          'images/pens_remBG.png',
-                          height: 38,
-                          width: 36.3,
-                        ),
-                      ],
-                    ),
-                  ),
                   Column(
                     mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Image.asset(
-                            'images/pens_sumenep_bg.png',
-                            height: 95,
-                            width: 95,
-                          ),
-                          Image.asset(
-                            'images/sumenep_logo-removebg.png',
-                            height: 38,
-                            width: 42.42,
-                          ),
-                        ],
+                      Image.asset(
+                        'images/pens_remBG.png',
+                        height: 38,
+                        width: 36.3,
+                      ),
+                    ],
+                  ),
+                  SizedBox(width: 50),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset(
+                        'images/pens_sumenep_bg.png',
+                        height: 95,
+                        width: 95,
+                      ),
+                    ],
+                  ),
+                  SizedBox(width: 50),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset(
+                        'images/sumenep_logo-removebg.png',
+                        height: 38,
+                        width: 42.42,
                       ),
                     ],
                   ),
@@ -81,7 +80,6 @@ class _MainPagesState extends State<MainPages> {
         ),
       ),
       body: Stack(
-        // Gunakan Stack untuk menempatkan widget popup di atas widget lainnya
         children: [
           SingleChildScrollView(
             child: Column(
@@ -158,9 +156,11 @@ class _MainPagesState extends State<MainPages> {
                           onPressed: () {
                             setState(() {
                               if (isCameraOpen) {
+                                controller?.pauseCamera();
                                 isCameraOpen = false;
                                 isScanned = false;
                               } else {
+                                controller?.resumeCamera();
                                 isCameraOpen = true;
                               }
                             });
@@ -242,7 +242,7 @@ class _MainPagesState extends State<MainPages> {
                 Positioned.fill(
                   child: Container(
                     color: Colors.black.withOpacity(0.5),
-                    child: Center(
+                    child: const Center(
                       child: CircularProgressIndicator(),
                     ),
                   ),
@@ -255,35 +255,82 @@ class _MainPagesState extends State<MainPages> {
   }
 
   void _onQRViewCreated(QRViewController controller) {
-    this.controller = controller;
+    setState(() {
+      this.controller = controller;
+    });
     controller.scannedDataStream.listen((scanData) {
-      setState(() {
-        isScanned = true;
-        isLoading = true;
-      });
-      _launchURL(scanData.code);
+      if (!isScanned) {
+        setState(() {
+          isScanned = true;
+          isLoading = true;
+          controller.pauseCamera();
+        });
+        _launchURL(scanData.code);
+      }
     });
   }
 
-  void _launchURL(String? url) async {
-    if (url != null) {
-      if (await canLaunch(url)) {
-        await launch(url);
+  void _launchURL(String? qrCode) async {
+    if (qrCode != null) {
+      final url = 'https://bar.kerissumenep.com/api/benda/$qrCode';
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => KontenPages(
+              url: url,
+              kode: qrCode,
+            ),
+          ),
+        ).then((_) {
+          setState(() {
+            isLoading = false;
+            isScanned = false;
+            controller?.resumeCamera();
+          });
+        });
       } else {
-        throw 'Tidak Terdeksi $url';
-      }
-
-      Future.delayed(Duration(seconds: 3), () {
+        _showInvalidQRAlert();
         setState(() {
           isLoading = false;
+          isScanned = false;
+          controller?.resumeCamera();
         });
+      }
+    } else {
+      _showInvalidQRAlert();
+      setState(() {
+        isLoading = false;
+        isScanned = false;
+        controller?.resumeCamera();
       });
     }
   }
 
+  void _showInvalidQRAlert() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('QR Code Tidak Valid'),
+          content: const Text('QR Code salah atau bukan punya kami.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
-    controller.dispose();
+    controller?.dispose();
     super.dispose();
   }
 }

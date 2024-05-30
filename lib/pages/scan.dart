@@ -39,39 +39,22 @@ class _MainPagesState extends State<MainPages> {
               backgroundColor: Colors.white,
               elevation: 0,
               title: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Image.asset(
-                        'images/pens_remBG.png',
-                        height: 38,
-                        width: 36.3,
-                      ),
-                    ],
+                  Image.asset(
+                    'images/pens_remBG.png',
+                    height: 38,
+                    width: 36.3,
                   ),
-                  SizedBox(width: 50),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Image.asset(
-                        'images/pens_sumenep_bg.png',
-                        height: 95,
-                        width: 95,
-                      ),
-                    ],
+                  Image.asset(
+                    'images/pens_sumenep_bg.png',
+                    height: 95,
+                    width: 95,
                   ),
-                  SizedBox(width: 50),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Image.asset(
-                        'images/sumenep_logo-removebg.png',
-                        height: 38,
-                        width: 42.42,
-                      ),
-                    ],
+                  Image.asset(
+                    'images/sumenep_logo-removebg.png',
+                    height: 38,
+                    width: 42.42,
                   ),
                 ],
               ),

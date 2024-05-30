@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:museumapp/pages/scan.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class KontenPages extends StatefulWidget {
   final String url;
@@ -16,13 +16,14 @@ class KontenPages extends StatefulWidget {
 }
 
 class _KontenPagesState extends State<KontenPages> {
-  late Map<String, dynamic> kontenData = {};
+  Map<String, dynamic>? kontenData;
   String selectedLanguage = 'Indonesia';
   final player = AudioPlayer();
   bool isPlaying = false;
   bool isDraggingSlider = false;
   Duration currentPosition = Duration.zero;
   Duration totalDuration = Duration.zero;
+  PageController _pageController = PageController();
 
   @override
   void initState() {
@@ -88,6 +89,33 @@ class _KontenPagesState extends State<KontenPages> {
 
   @override
   Widget build(BuildContext context) {
+    // Check if kontenData is null and show a loading indicator
+    if (kontenData == null) {
+      return const Scaffold(
+        backgroundColor: const Color(0xFF11497C),
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Loading...',
+                style: TextStyle(
+                  color: Colors.white, // Warna teks
+                  fontSize: 18.0, // Ukuran font
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Check if 'gambar_bendas' key exists and is not empty
+    // Check if 'gambar_bendas' key exists and is not empty
+    final gambarList = kontenData!['gambar_bendas'] != null &&
+            kontenData!['gambar_bendas'].isNotEmpty
+        ? kontenData!['gambar_bendas']
+        : [];
     return Scaffold(
       backgroundColor: const Color(0xFF11497C),
       appBar: PreferredSize(
@@ -105,42 +133,26 @@ class _KontenPagesState extends State<KontenPages> {
               ],
             ),
             child: AppBar(
+              automaticallyImplyLeading: false,
               backgroundColor: Colors.white,
               elevation: 0,
               title: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Image.asset(
-                        'images/pens_remBG.png',
-                        height: 38,
-                        width: 36.3,
-                      ),
-                    ],
+                  Image.asset(
+                    'images/pens_remBG.png',
+                    height: 38,
+                    width: 36.3,
                   ),
-                  SizedBox(width: 50),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Image.asset(
-                        'images/pens_sumenep_bg.png',
-                        height: 95,
-                        width: 95,
-                      ),
-                    ],
+                  Image.asset(
+                    'images/pens_sumenep_bg.png',
+                    height: 95,
+                    width: 95,
                   ),
-                  SizedBox(width: 50),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Image.asset(
-                        'images/sumenep_logo-removebg.png',
-                        height: 38,
-                        width: 42.42,
-                      ),
-                    ],
+                  Image.asset(
+                    'images/sumenep_logo-removebg.png',
+                    height: 38,
+                    width: 42.42,
                   ),
                 ],
               ),
@@ -186,7 +198,7 @@ class _KontenPagesState extends State<KontenPages> {
                                         top: 10,
                                         bottom: 2),
                                     child: Text(
-                                      kontenData['nama'] ?? '',
+                                      kontenData!['nama'] ?? '',
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontFamily: 'Orelega One',
@@ -203,11 +215,52 @@ class _KontenPagesState extends State<KontenPages> {
                                 width: MediaQuery.of(context).size.width,
                                 child: Center(
                                   child: Padding(
-                                    padding: const EdgeInsets.only(bottom: 10),
-                                    child: Image.asset(
-                                      'images/keris.png',
-                                      fit: BoxFit.cover,
-                                    ),
+                                    padding: const EdgeInsets.only(bottom: 2),
+                                    child: gambarList.isNotEmpty
+                                        ? Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              SizedBox(
+                                                height: 330,
+                                                child: PageView.builder(
+                                                  controller: _pageController,
+                                                  itemCount: gambarList.length,
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    final gambar =
+                                                        gambarList[index];
+                                                    return Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              8.0),
+                                                      child: Image.network(
+                                                        'https://bar.kerissumenep.com/foto-benda/${gambar['gambar']}',
+                                                        fit: BoxFit.cover,
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
+                                              ),
+                                              const SizedBox(height: 16),
+                                              SmoothPageIndicator(
+                                                controller: _pageController,
+                                                count: gambarList.length,
+                                                effect: WormEffect(
+                                                  dotHeight: 12,
+                                                  dotWidth: 12,
+                                                  activeDotColor: Colors.white,
+                                                  dotColor: Colors.grey,
+                                                ),
+                                              ),
+                                            ],
+                                          )
+                                        : const Text(
+                                            'No image available',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                            ),
+                                          ),
                                   ),
                                 ),
                               ),
@@ -283,7 +336,7 @@ class _KontenPagesState extends State<KontenPages> {
                         ),
                         child: SingleChildScrollView(
                           child: Text(
-                            kontenData['deskripsi'] ?? '',
+                            kontenData!['deskripsi'] ?? '',
                             style: const TextStyle(
                               fontSize: 16,
                               color: Colors.black,

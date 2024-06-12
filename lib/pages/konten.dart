@@ -17,6 +17,7 @@ class KontenPages extends StatefulWidget {
 
 class _KontenPagesState extends State<KontenPages> {
   Map<String, dynamic>? kontenData;
+  List<Map<String, dynamic>> languages = [];
   String selectedLanguage = 'Indonesia';
   final player = AudioPlayer();
   bool isPlaying = false;
@@ -54,8 +55,16 @@ class _KontenPagesState extends State<KontenPages> {
     try {
       final response = await http.get(Uri.parse(widget.url));
       if (response.statusCode == 200) {
+        final data = jsonDecode(response.body)['payload'];
         setState(() {
-          kontenData = jsonDecode(response.body)['payload'];
+          kontenData = data;
+          languages = (data['voice_bendas'] as List).map((voice) {
+            return {
+              'languageId': voice['languageId'],
+              'bahasa': voice['language']['bahasa'],
+            };
+          }).toList();
+          selectedLanguage = languages.first['bahasa'];
         });
       } else {
         throw Exception('Failed to load data');
@@ -92,8 +101,8 @@ class _KontenPagesState extends State<KontenPages> {
     // Check if kontenData is null and show a loading indicator
     if (kontenData == null) {
       return const Scaffold(
-        backgroundColor: const Color(0xFF11497C),
-        body: const Center(
+        backgroundColor: Color(0xFF11497C),
+        body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -110,12 +119,12 @@ class _KontenPagesState extends State<KontenPages> {
       );
     }
 
-    // Check if 'gambar_bendas' key exists and is not empty
-    // Check if 'gambar_bendas' key exists and is not empty
-    final gambarList = kontenData!['gambar_bendas'] != null &&
-            kontenData!['gambar_bendas'].isNotEmpty
-        ? kontenData!['gambar_bendas']
-        : [];
+    final gambarList = kontenData!['gambar_bendas'] ?? [];
+    final selectedLanguageData = kontenData!['deskripsis']
+        .firstWhere((desc) => desc['language']['bahasa'] == selectedLanguage);
+    final selectedVoiceData = kontenData!['voice_bendas']
+        .firstWhere((voice) => voice['language']['bahasa'] == selectedLanguage);
+
     return Scaffold(
       backgroundColor: const Color(0xFF11497C),
       appBar: PreferredSize(
@@ -301,15 +310,14 @@ class _KontenPagesState extends State<KontenPages> {
                             selectedLanguage = newValue!;
                           });
                         },
-                        items: <String>['Indonesia', 'English', 'Madura']
-                            .map<DropdownMenuItem<String>>((String value) {
+                        items: languages.map<DropdownMenuItem<String>>((lang) {
                           return DropdownMenuItem<String>(
-                            value: value,
+                            value: lang['bahasa'],
                             child: Padding(
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 12.0),
                               child: Text(
-                                value,
+                                lang['bahasa'],
                                 style: const TextStyle(color: Colors.white),
                               ),
                             ),
@@ -336,7 +344,7 @@ class _KontenPagesState extends State<KontenPages> {
                         ),
                         child: SingleChildScrollView(
                           child: Text(
-                            kontenData!['deskripsi'] ?? '',
+                            selectedLanguageData['deskripsi'] ?? '',
                             style: const TextStyle(
                               fontSize: 16,
                               color: Colors.black,
@@ -382,7 +390,8 @@ class _KontenPagesState extends State<KontenPages> {
                                   if (isPlaying) {
                                     stopAudio();
                                   } else {
-                                    playAudioFromUrl(widget.url);
+                                    playAudioFromUrl(
+                                        'https://bar.kerissumenep.com/voice-benda/${selectedVoiceData['voice']}');
                                   }
                                 },
                                 child: Text(

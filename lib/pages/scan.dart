@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:museumapp/pages/konten.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class MainPages extends StatefulWidget {
   const MainPages({Key? key}) : super(key: key);
@@ -16,6 +17,39 @@ class _MainPagesState extends State<MainPages> {
   bool isCameraOpen = false;
   bool isScanned = false;
   bool isLoading = false;
+  String logoPens = '';
+  String logoAplikasi = '';
+  String logoPensPsdku = '';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+
+  Future<void> fetchData() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final response =
+        await http.get(Uri.parse('https://bar.kerissumenep.com/api/setting'));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      setState(() {
+        logoPens = data['payload'][0]['logo_pens'];
+        logoAplikasi = data['payload'][0]['logo_aplikasi'];
+        logoPensPsdku = data['payload'][0]['logo_pens_psdku'];
+        isLoading = false;
+      });
+    } else {
+      // Handle error
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,20 +75,38 @@ class _MainPagesState extends State<MainPages> {
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Image.asset(
-                    'images/pens_remBG.png',
-                    height: 38,
-                    width: 36.3,
+                  Expanded(
+                    child: logoPens.isNotEmpty
+                        ? Image.network(
+                            'https://bar.kerissumenep.com/setting/$logoPens',
+                            height: 38,
+                            width: 36.3,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.error),
+                          )
+                        : const SizedBox(),
                   ),
-                  Image.asset(
-                    'images/pens_sumenep_bg.png',
-                    height: 95,
-                    width: 95,
+                  Expanded(
+                    child: logoAplikasi.isNotEmpty
+                        ? Image.network(
+                            'https://bar.kerissumenep.com/setting/$logoAplikasi',
+                            height: 95,
+                            width: 95,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.error),
+                          )
+                        : const SizedBox(),
                   ),
-                  Image.asset(
-                    'images/sumenep_logo-removebg.png',
-                    height: 38,
-                    width: 42.42,
+                  Expanded(
+                    child: logoPensPsdku.isNotEmpty
+                        ? Image.network(
+                            'https://bar.kerissumenep.com/setting/$logoPensPsdku',
+                            height: 38,
+                            width: 42.42,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.error),
+                          )
+                        : const SizedBox(),
                   ),
                 ],
               ),

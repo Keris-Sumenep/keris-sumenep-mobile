@@ -25,6 +25,10 @@ class _KontenPagesState extends State<KontenPages> {
   Duration currentPosition = Duration.zero;
   Duration totalDuration = Duration.zero;
   PageController _pageController = PageController();
+  String logoPens = '';
+  String logoAplikasi = '';
+  String logoPensPsdku = '';
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -72,6 +76,24 @@ class _KontenPagesState extends State<KontenPages> {
     } catch (e) {
       print('Error fetching data: $e');
       // Handle error accordingly
+    }
+
+    final response2 =
+        await http.get(Uri.parse('https://bar.kerissumenep.com/api/setting'));
+
+    if (response2.statusCode == 200) {
+      final data = json.decode(response2.body);
+      setState(() {
+        logoPens = data['payload'][0]['logo_pens'];
+        logoAplikasi = data['payload'][0]['logo_aplikasi'];
+        logoPensPsdku = data['payload'][0]['logo_pens_psdku'];
+        isLoading = false;
+      });
+    } else {
+      // Handle error
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -146,23 +168,35 @@ class _KontenPagesState extends State<KontenPages> {
               backgroundColor: Colors.white,
               elevation: 0,
               title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Image.asset(
-                    'images/pens_remBG.png',
-                    height: 38,
-                    width: 36.3,
-                  ),
-                  Image.asset(
-                    'images/pens_sumenep_bg.png',
-                    height: 95,
-                    width: 95,
-                  ),
-                  Image.asset(
-                    'images/sumenep_logo-removebg.png',
-                    height: 38,
-                    width: 42.42,
-                  ),
+                  logoPens.isNotEmpty
+                      ? Image.network(
+                          'https://bar.kerissumenep.com/setting/$logoPens',
+                          height: 40,
+                          width: 100,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.error),
+                        )
+                      : SizedBox(),
+                  logoAplikasi.isNotEmpty
+                      ? Image.network(
+                          'https://bar.kerissumenep.com/setting/$logoAplikasi',
+                          height: 50,
+                          width: 100,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.error),
+                        )
+                      : SizedBox(),
+                  logoPensPsdku.isNotEmpty
+                      ? Image.network(
+                          'https://bar.kerissumenep.com/setting/$logoPensPsdku',
+                          height: 90,
+                          width: 100,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.error),
+                        )
+                      : SizedBox(),
                 ],
               ),
             ),
@@ -224,7 +258,7 @@ class _KontenPagesState extends State<KontenPages> {
                                 width: MediaQuery.of(context).size.width,
                                 child: Center(
                                   child: Padding(
-                                    padding: const EdgeInsets.only(bottom: 2),
+                                    padding: const EdgeInsets.only(bottom: 4),
                                     child: gambarList.isNotEmpty
                                         ? Column(
                                             mainAxisSize: MainAxisSize.min,
@@ -241,10 +275,9 @@ class _KontenPagesState extends State<KontenPages> {
                                                     return Padding(
                                                       padding:
                                                           const EdgeInsets.all(
-                                                              8.0),
+                                                              5.0),
                                                       child: Image.network(
                                                         'https://bar.kerissumenep.com/foto-benda/${gambar['gambar']}',
-                                                        fit: BoxFit.cover,
                                                       ),
                                                     );
                                                   },
@@ -254,7 +287,7 @@ class _KontenPagesState extends State<KontenPages> {
                                               SmoothPageIndicator(
                                                 controller: _pageController,
                                                 count: gambarList.length,
-                                                effect: WormEffect(
+                                                effect: const WormEffect(
                                                   dotHeight: 12,
                                                   dotWidth: 12,
                                                   activeDotColor: Colors.white,

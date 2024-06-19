@@ -70,44 +70,39 @@ class _MainPagesState extends State<MainPages> {
               ],
             ),
             child: AppBar(
+              automaticallyImplyLeading: false,
               backgroundColor: Colors.white,
               elevation: 0,
               title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Expanded(
-                    child: logoPens.isNotEmpty
-                        ? Image.network(
-                            'https://bar.kerissumenep.com/setting/$logoPens',
-                            height: 38,
-                            width: 36.3,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(Icons.error),
-                          )
-                        : const SizedBox(),
-                  ),
-                  Expanded(
-                    child: logoAplikasi.isNotEmpty
-                        ? Image.network(
-                            'https://bar.kerissumenep.com/setting/$logoAplikasi',
-                            height: 95,
-                            width: 95,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(Icons.error),
-                          )
-                        : const SizedBox(),
-                  ),
-                  Expanded(
-                    child: logoPensPsdku.isNotEmpty
-                        ? Image.network(
-                            'https://bar.kerissumenep.com/setting/$logoPensPsdku',
-                            height: 38,
-                            width: 42.42,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(Icons.error),
-                          )
-                        : const SizedBox(),
-                  ),
+                  logoPens.isNotEmpty
+                      ? Image.network(
+                          'https://bar.kerissumenep.com/setting/$logoPens',
+                          height: 40,
+                          width: 100,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.error),
+                        )
+                      : SizedBox(),
+                  logoAplikasi.isNotEmpty
+                      ? Image.network(
+                          'https://bar.kerissumenep.com/setting/$logoAplikasi',
+                          height: 50,
+                          width: 100,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.error),
+                        )
+                      : SizedBox(),
+                  logoPensPsdku.isNotEmpty
+                      ? Image.network(
+                          'https://bar.kerissumenep.com/setting/$logoPensPsdku',
+                          height: 90,
+                          width: 100,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.error),
+                        )
+                      : SizedBox(),
                 ],
               ),
             ),
